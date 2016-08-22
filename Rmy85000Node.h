@@ -42,7 +42,7 @@ public:
     
 private:
     
-    explicit Rmy85000Node(std::string devfile = "/dev/ttyO0") {}
+    explicit Rmy85000Node(std::string devfile = "/dev/ttyS0") {}
     
     ~Rmy85000Node() {}
     
