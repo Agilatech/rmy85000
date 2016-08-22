@@ -1,0 +1,23 @@
+{
+  "name": "@agilatech/rmy85000",
+  "version": "0.8.0",
+  "description": "Driver for the RMY85000 Sensor",
+  "main": "./build/Release/rmy85000",
+  "gypfile": true,
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Agilatech/rmy85000.git"
+  },
+  "keywords": [
+    "Sensor",
+    "RMY85000",
+    "Anemometer",
+    "Wind",
+    "Ultrasonic"
+  ],
+  "author": "Scott Erholm <scott@agilatech.com>",
+  "license": "MIT"
+}
