@@ -1,6 +1,6 @@
 ##Node addon for the RM Young 85000 Ultrasonic Anemometer
 
-#####This addon should work on any Linux platform, but has only been tested on BBB
+#####This addon should work on any Linux platform, and has been thoroughly tested on BeagleBone Black
 
 ###Install
 
@@ -51,6 +51,13 @@ rmy85000.valueAtIndex(0, function(err, val) {
     }
 });
 ```
+
+###Operation Notes
+This driver is specifc to the RM Young 85000 series ultrasonic anemometer.  The hardware measures wind speed from 
+0-60 m/s with an accuracy of ±0.1 m/s. Wind direction is measured from 0-360 degrees with an accuracy of ±3 degrees.
+
+The hardware interfaces via RS-232 or RS-485, so your hardware must support one of these protocols.  The serial 
+device file is specified in the constructor.
 
 ###Dependencies
 * node-gyp
