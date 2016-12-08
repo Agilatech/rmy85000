@@ -16,21 +16,22 @@ node-gyp configure build
 ```
 
 ###Usage
-#####Load the module and create and instance
+#####Load the module and create an instance
 ```
-const addon = require('rmy85000');
+const addon = require('@agilatech/rmy85000');
 
 // create an instance on the /dev/ttyO2 serial device file
 const rmy85000 = new addon.Rmy85000('/dev/ttyO2');
 ```
 #####Get basic device info
 ```
-const name = rmy85000.rmy85000();  // returns string with name of device
+const name = rmy85000.deviceName();  // returns string with name of device
+const type = rmy85000.deviceType();  // returns string with type of device
 const version = rmy85000.deviceVersion(); // returns this software version
 const active = rmy85000.deviceActive(); // true if active, false if inactive
 const numVals =  rmy85000.deviceNumValues(); // returns the number of paramters sensed
 ```
-####Get paramter info and values
+####Get parameter info and values
 ```
 const paramName0 = rmy85000.nameAtIndex(0);
 const paramType0 = rmy85000.typeAtIndex(0);
@@ -53,14 +54,12 @@ rmy85000.valueAtIndex(0, function(err, val) {
 ```
 
 ###Operation Notes
-This driver is specifc to the RM Young 85000 series ultrasonic anemometer.  The hardware measures wind speed from 
-0-60 m/s with an accuracy of ±0.1 m/s. Wind direction is measured from 0-360 degrees with an accuracy of ±3 degrees.
+This driver is specifc to the RM Young 85000 series ultrasonic anemometer.  The hardware measures wind speed from 0-60 m/s with an accuracy of ±0.1 m/s. Wind direction is measured from 0-360 degrees with an accuracy of ±3 degrees.
 
-The hardware interfaces via RS-232 or RS-485, so your hardware must support one of these protocols.  The serial 
-device file is specified in the constructor.
+The hardware interfaces via RS-232 or RS-485, so your hardware must support one of these protocols.  The serial device file is specified in the constructor.
 
 ###Dependencies
-* node-gyp
+* node-gyp is used to configure and build
 
 ###Copyright
 Copyright © 2016 Agilatech. All Rights Reserved.

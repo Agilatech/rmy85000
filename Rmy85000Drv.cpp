@@ -31,9 +31,14 @@ std::string Rmy85000Drv::getVersion() {
     return name + " " + version;
 }
 
-std::string Rmy85000Drv::getRmy85000() {
+std::string Rmy85000Drv::getDeviceName() {
     return name;
 }
+
+std::string Rmy85000Drv::getDeviceType() {
+    return type;
+}
+
 
 int Rmy85000Drv::getNumValues() {
     return numValues;
@@ -57,6 +62,17 @@ std::string Rmy85000Drv::getNameAtIndex(int index) {
 
 bool Rmy85000Drv::isActive() {
     return this->active;
+}
+
+std::string Rmy85000Drv::getValueByName(std::string name) {
+    
+    for (int i = 0; i < numValues; i++) {
+        if (name == valueNames[i]) {
+            return this->getValueAtIndex(i);
+        }
+    }
+    
+    return "none";
 }
 
 std::string Rmy85000Drv::getValueAtIndex(int index) {

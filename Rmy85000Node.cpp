@@ -45,7 +45,8 @@ namespace rmy85000 {
         // InstanceTemplate is the ObjectTemplate assocated with the function New
         tpl->InstanceTemplate()->SetInternalFieldCount(1);
         
-        NODE_SET_PROTOTYPE_METHOD(tpl, "rmy85000", getRmy85000);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "deviceName", getDeviceName);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "deviceType", getDeviceType);
         NODE_SET_PROTOTYPE_METHOD(tpl, "deviceVersion", getDeviceVersion);
         NODE_SET_PROTOTYPE_METHOD(tpl, "deviceNumValues", getDeviceNumValues);
         NODE_SET_PROTOTYPE_METHOD(tpl, "typeAtIndex", getTypeAtIndex);
@@ -60,13 +61,22 @@ namespace rmy85000 {
         exports->Set(String::NewFromUtf8(isolate, "Rmy85000"), tpl->GetFunction());
     }
     
-    void Rmy85000Node::getRmy85000(const FunctionCallbackInfo<Value>& args) {
+    void Rmy85000Node::getDeviceName(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         
-        std::string name = Rmy85000Drv::getRmy85000();
+        std::string name = Rmy85000Drv::getDeviceName();
         Local<String> rmy85000 = String::NewFromUtf8(isolate, name.c_str());
         
         args.GetReturnValue().Set(rmy85000);
+    }
+    
+    void Rmy85000Node::getDeviceType(const FunctionCallbackInfo<Value>& args) {
+        Isolate* isolate = args.GetIsolate();
+        
+        std::string type = Rmy85000Drv::getDeviceType();
+        Local<String> deviceType = String::NewFromUtf8(isolate, type.c_str());
+        
+        args.GetReturnValue().Set(deviceType);
     }
     
     void Rmy85000Node::getDeviceVersion(const FunctionCallbackInfo<Value>& args) {

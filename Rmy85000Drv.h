@@ -31,6 +31,8 @@
 
 
 static const std::string name = "RMY85000";
+static const std::string type = "sensor";
+
 static const std::string version = "0.8.0";
 
 static const int RMY85000_READ_DELAY = 400; // milliseconds
@@ -47,12 +49,14 @@ public:
     Rmy85000Drv(std::string devfile);
     
     static std::string getVersion();
-    static std::string getRmy85000();
+    static std::string getDeviceName();
+    static std::string getDeviceType();
     static int getNumValues();
     static std::string getTypeAtIndex(int index);
     static std::string getNameAtIndex(int index);
     
     bool isActive();
+    std::string getValueByName(std::string name);
     std::string getValueAtIndex(int index);
     
 protected:
