@@ -218,7 +218,7 @@ void Rmy85000Drv::processSerialStream() {
             count++;
         }
         
-        if (count > 58) {
+        if (count > 59) {
             this->avg_speed = round(speed_total/6) / 10;  // round to 1 decimal place
             
             // Yes, yes, we know that this is a bogus way to calc avg dir
