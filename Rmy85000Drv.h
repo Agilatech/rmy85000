@@ -21,60 +21,51 @@
 #include <fcntl.h>
 #include <string>
 #include <unistd.h>
+#include <thread>
+#include <cmath>
+#include "Device.h"
 #include "DataManip.h"
 
-#ifdef DEBUG
-#  define DPRINT(x) do { std::cerr << x; std::cerr << std::endl; } while (0)
-#else
-#  define DPRINT(x) do {} while (0)
-#endif
-
-
-static const std::string name = "RMY85000";
-static const std::string type = "sensor";
-
-static const std::string version = "0.8.0";
-
-static const int RMY85000_READ_DELAY = 400; // milliseconds
-static const int RMY85000_CALIBRATION_MULTIPLIER = 1.5;
-
-static const int numValues = 2;
-
-static const std::string valueNames[numValues] = {"speed", "direction"};
-static const std::string valueTypes[numValues] = {"float", "integer"};
-
-class Rmy85000Drv {
+class Rmy85000Drv : public Device {
     
 public:
     Rmy85000Drv(std::string devfile);
+    virtual std::string getValueAtIndex(int index);
     
-    static std::string getVersion();
-    static std::string getDeviceName();
-    static std::string getDeviceType();
-    static int getNumValues();
-    static std::string getTypeAtIndex(int index);
-    static std::string getNameAtIndex(int index);
-    
-    bool isActive();
-    std::string getValueByName(std::string name);
-    std::string getValueAtIndex(int index);
+    static const int NUM_VALUES = 6;
     
 protected:
     
     bool initialize();
     std::string readValue0();
     std::string readValue1();
+    std::string readValue2();
+    std::string readValue3();
+    std::string readValue4();
+    std::string readValue5();
     
 private:
     
+    // Create an array of read functions, so that multiple functions can be easily called
+    typedef std::string(Rmy85000Drv::*readValueType)();
+    readValueType readFunction[NUM_VALUES] = { &Rmy85000Drv::readValue0, &Rmy85000Drv::readValue1,
+                                               &Rmy85000Drv::readValue2, &Rmy85000Drv::readValue3,
+                                               &Rmy85000Drv::readValue4, &Rmy85000Drv::readValue5};
+    
+    static const int RMY85000_READ_DELAY = 250; // milliseconds
+    static const int RMY85000_REFRESH_RATE = 1000; // milliseconds
+    static const int RMY85000_CALIBRATION_MULTIPLIER = 1.5;
+
     bool readSerial();
     void sendString(unsigned char *string, int numChars);
-    
-    bool active = false;
+    void processSerialStream();
     
     const char *serialDevice;
     char receiveBuffer[100];
     int serialFile;
+    
+    float speed, avg_speed, gust_speed;
+    uint16_t dir, avg_dir, gust_dir;
     
 };
 

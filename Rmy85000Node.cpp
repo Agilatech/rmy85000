@@ -64,7 +64,7 @@ namespace rmy85000 {
     void Rmy85000Node::getDeviceName(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         
-        std::string name = Rmy85000Drv::getDeviceName();
+        std::string name = driver->getDeviceName();
         Local<String> rmy85000 = String::NewFromUtf8(isolate, name.c_str());
         
         args.GetReturnValue().Set(rmy85000);
@@ -73,7 +73,7 @@ namespace rmy85000 {
     void Rmy85000Node::getDeviceType(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         
-        std::string type = Rmy85000Drv::getDeviceType();
+        std::string type = driver->getDeviceType();
         Local<String> deviceType = String::NewFromUtf8(isolate, type.c_str());
         
         args.GetReturnValue().Set(deviceType);
@@ -82,7 +82,7 @@ namespace rmy85000 {
     void Rmy85000Node::getDeviceVersion(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         
-        std::string ver = Rmy85000Drv::getVersion();
+        std::string ver = driver->getVersion();
         Local<String> deviceVer = String::NewFromUtf8(isolate, ver.c_str());
         
         args.GetReturnValue().Set(deviceVer);
@@ -91,7 +91,7 @@ namespace rmy85000 {
     void Rmy85000Node::getDeviceNumValues (const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         
-        int value = Rmy85000Drv::getNumValues();
+        int value = driver->getNumValues();
         Local<Number> deviceNumVals = Number::New(isolate, value);
         
         args.GetReturnValue().Set(deviceNumVals);

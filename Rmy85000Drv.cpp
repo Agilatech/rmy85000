@@ -14,65 +14,33 @@
 
 #include "Rmy85000Drv.h"
 
+const std::string Device::name = "RMY85000";
+const std::string Device::type = "sensor";
+
+const int Device::numValues = Rmy85000Drv::NUM_VALUES;
+
+const std::string Device::valueNames[numValues] = {"speed", "direction", "avg_speed", "avg_direction",
+                                                   "gust_speed", "gust_direction"};
+
+const std::string Device::valueTypes[numValues] = {"float", "integer", "float", "integer", "float", "integer"};
+
 Rmy85000Drv::Rmy85000Drv(std::string devfile) {
     
     this->serialDevice = devfile.c_str();
     
     if (initialize()) {
         this->active = true;
+        
+        std::thread t1(&Rmy85000Drv::processSerialStream, this);
+        
+        // need to let this thread go off on its own and work behind the scenes
+        t1.detach();
+
     }
     else {
         std::cerr << name << " did not initialize. " << name << " is inactive" << std::endl;
     }
     
-}
-
-std::string Rmy85000Drv::getVersion() {
-    return name + " " + version;
-}
-
-std::string Rmy85000Drv::getDeviceName() {
-    return name;
-}
-
-std::string Rmy85000Drv::getDeviceType() {
-    return type;
-}
-
-
-int Rmy85000Drv::getNumValues() {
-    return numValues;
-}
-
-std::string Rmy85000Drv::getTypeAtIndex(int index) {
-    if ((index < 0) || (index > (numValues - 1))) {
-        return "none";
-    }
-    
-    return valueTypes[index];
-}
-
-std::string Rmy85000Drv::getNameAtIndex(int index) {
-    if ((index < 0) || (index > (numValues - 1))) {
-        return "none";
-    }
-    
-    return valueNames[index];
-}
-
-bool Rmy85000Drv::isActive() {
-    return this->active;
-}
-
-std::string Rmy85000Drv::getValueByName(std::string name) {
-    
-    for (int i = 0; i < numValues; i++) {
-        if (name == valueNames[i]) {
-            return this->getValueAtIndex(i);
-        }
-    }
-    
-    return "none";
 }
 
 std::string Rmy85000Drv::getValueAtIndex(int index) {
@@ -81,19 +49,18 @@ std::string Rmy85000Drv::getValueAtIndex(int index) {
         return "none";
     }
 
-    if (index == 0) {
-        return this->readValue0();
-    }
-    else if (index == 1) {
-        return this->readValue1();
+    if (index < numValues) {
+        return (this->*readFunction[index])();
     }
     else {
         return "none";
     }
-    
 }
 
 bool Rmy85000Drv::initialize() {
+    
+    this->speed = this->avg_speed = this->gust_speed = 0.0;
+    this->dir   = this->avg_dir   = this->gust_dir   = 0;
     
     if ((this->serialFile = open(this->serialDevice, O_RDWR | O_NOCTTY | O_NDELAY)) < 0 ) {
         std::cerr << "RMY85000 : Failed to open serial device file " << this->serialDevice << std::endl;
@@ -114,7 +81,7 @@ bool Rmy85000Drv::initialize() {
     unsigned char tripleEsc[4] = "\x1B\x1B\x1B";
     unsigned char operate[4] = "XX\n";
     unsigned char rs232[9] = "SET0102\n";
-    unsigned char polled[9] = "SET0203\n";
+    unsigned char ascii[9] = "SET0202\n";
     unsigned char units[9] = "SET0404\n";
     unsigned char damping[9] = "SET0905\n";
     unsigned char sample[9] = "SET1230\n";
@@ -132,8 +99,8 @@ bool Rmy85000Drv::initialize() {
     usleep(RMY85000_READ_DELAY * 1000);
     if (!readSerial()) { return false; }
     
-    // Setting ASCII POLLED output ///
-    sendString(polled, 8);
+    // Setting ASCII output ///
+    sendString(ascii, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
     if (!readSerial()) { return false; }
@@ -178,59 +145,32 @@ bool Rmy85000Drv::initialize() {
 
 std::string Rmy85000Drv::readValue0() {
     
-    if (!this->active) {
-        return "none";
-    }
-    
-    float speed = 0;
-    
-    unsigned char poll[4] = "M0!";
-    sendString(poll, 3);
-    usleep(RMY85000_READ_DELAY * 1000);
-    
-    if (readSerial()) {
-        
-        std::string buff(this->receiveBuffer);
-        
-        // Output is a ww.w ddd ss*cc<CR> where 'ww.w' is speed and ddd is direction
-        speed = std::stof(buff.substr(2,4), nullptr) * RMY85000_CALIBRATION_MULTIPLIER;
-        
-    }
-    else {
-        std::cerr << "RMY85000 : Failed to read from serial device file " << this->serialDevice << std::endl;
-    }
-
-    return DataManip::dataToString(speed, 1);
+    return DataManip::dataToString(this->speed, 1);
 }
 
 std::string Rmy85000Drv::readValue1() {
     
-    if (!this->active) {
-        return "none";
-    }
+    return DataManip::dataToString(this->dir);
+}
+
+std::string Rmy85000Drv::readValue2() {
     
-    uint16_t dir = 0;
-    
-    unsigned char poll[4] = "M0!";
-    sendString(poll, 3);
-    usleep(RMY85000_READ_DELAY * 1000);
-    
-    if (readSerial()) {
-        
-        std::string buff(this->receiveBuffer);
-        
-        // Output is a ww.w ddd ss*cc<CR> where 'ww.w' is speed and ddd is direction
-        dir = std::stoi(buff.substr(7,3), nullptr, 10);
-        
-        // Handle the case that the direciton is 360
-        if (dir > 359) { dir = 0; }
-        
-    }
-    else {
-        std::cerr << "RMY85000 : Failed to read from serial device file " << this->serialDevice << std::endl;
-    }
-    
-    return DataManip::dataToString(dir);
+    return DataManip::dataToString(this->avg_speed, 1);
+}
+
+std::string Rmy85000Drv::readValue3() {
+
+    return DataManip::dataToString(this->avg_dir);
+}
+
+std::string Rmy85000Drv::readValue4() {
+
+    return DataManip::dataToString(this->gust_speed, 1);
+}
+
+std::string Rmy85000Drv::readValue5() {
+
+    return DataManip::dataToString(this->gust_dir);
 }
 
 bool Rmy85000Drv::readSerial() {
@@ -244,6 +184,57 @@ bool Rmy85000Drv::readSerial() {
         this->receiveBuffer[count] = 0;
     }
     return true;
+}
+
+void Rmy85000Drv::processSerialStream() {
+    
+    float speed_total = 0.0, max_speed = 0.0;
+    uint16_t dir_total = 0, max_dir = 0;
+    uint8_t count = 0;
+    
+    while (1) {
+
+        readSerial();
+        
+        std::string buff(this->receiveBuffer);
+        
+        // Output is a ww.w ddd ss*cc<CR> where 'ww.w' is speed and ddd is direction
+        // and ss is status (good status is 00)
+        
+        // extract values only if the string looks right
+        if ((buff.length() == 17) && (buff.substr(11,3) == "00*")) {
+            
+            this->speed = std::stof(buff.substr(2,4), nullptr) * RMY85000_CALIBRATION_MULTIPLIER;
+            this->dir   = std::stoi(buff.substr(7,3), nullptr, 10);
+            
+            speed_total += this->speed;
+            dir_total += this->dir;
+            
+            if (speed > max_speed) {
+                max_speed = speed;
+                max_dir = dir;
+            }
+            
+            count++;
+        }
+        
+        if (count > 58) {
+            this->avg_speed = round(speed_total/6) / 10;  // round to 1 decimal place
+            
+            // Yes, yes, we know that this is a bogus way to calc avg dir
+            this->avg_dir  = round(dir_total/60);
+            
+            this->gust_speed = max_speed;
+            this->gust_dir = max_dir;
+            
+            speed_total = max_speed = 0.0;
+            dir_total = max_dir = 0;
+            count = 0;
+        }
+        
+        usleep(RMY85000_REFRESH_RATE * 1000);
+        
+    }
 }
 
 // This function is completely ridiculous but necessary.  The RMY85000 cannot
