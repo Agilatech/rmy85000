@@ -1,6 +1,6 @@
 {
   "name": "@agilatech/rmy85000",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Driver for the RMY85000 Sensor",
   "main": "./build/Release/rmy85000",
   "gypfile": true,
