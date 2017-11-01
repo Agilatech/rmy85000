@@ -241,9 +241,9 @@ void Rmy85000Drv::processSerialStream() {
 // read a string sent to it at the stated baud.  Therefore, we have to send one
 // character at a time with a delay in between.
 void Rmy85000Drv::sendString(unsigned char *string, int numChars) {
-    for (int i = 0; i < numChars; i++) {
+     for (int i = 0; i < numChars; i++) {
         write(this->serialFile, string+i, 1);
-        usleep(1000);
+        usleep(10000);  // yeah, that is really 10 msec.  Sloooooowwww, I know
     }
 }
 

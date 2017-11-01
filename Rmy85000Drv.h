@@ -52,9 +52,15 @@ private:
                                                &Rmy85000Drv::readValue2, &Rmy85000Drv::readValue3,
                                                &Rmy85000Drv::readValue4, &Rmy85000Drv::readValue5};
     
-    static const int RMY85000_READ_DELAY = 250; // milliseconds
+    // The serial device in the RMY85000 seems slow to respond, below the stated baud.
+    // So, we add this extra read delay before trying to read a response
+    static const int RMY85000_READ_DELAY = 550; // milliseconds
+    
     static const int RMY85000_REFRESH_RATE = 1000; // milliseconds
-    static const int RMY85000_CALIBRATION_MULTIPLIER = 1.5;
+    
+    // Multiplies the raw output by this factor to achieve a calibrated output.
+    // Yes, this should indeed be a settable parameter, not a static const
+    static const int RMY85000_CALIBRATION_MULTIPLIER = 1.75;
 
     bool readSerial();
     void sendString(unsigned char *string, int numChars);
