@@ -188,6 +188,9 @@ bool Rmy85000Drv::readSerial() {
 
 void Rmy85000Drv::processSerialStream() {
     
+    this->speed = 0.0, this->avg_speed = 0.0, this->gust_speed = 0.0;
+    this->dir = 0, this->avg_dir = 0, this->gust_dir = 0;
+    
     float speed_total = 0.0, max_speed = 0.0;
     uint16_t dir_total = 0, max_dir = 0;
     uint8_t count = 0;
