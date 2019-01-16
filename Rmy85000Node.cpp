@@ -99,8 +99,9 @@ namespace rmy85000 {
     
     void Rmy85000Node::getTypeAtIndex (const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
+        Local<Context> context = isolate->GetCurrentContext();
         
-        std::string type = driver->getTypeAtIndex(args[0]->NumberValue());
+        std::string type = driver->getTypeAtIndex(args[0]->NumberValue(context).FromMaybe(0));
         Local<String> valType = String::NewFromUtf8(isolate, type.c_str());
         
         args.GetReturnValue().Set(valType);
@@ -108,8 +109,9 @@ namespace rmy85000 {
     
     void Rmy85000Node::getNameAtIndex (const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
+        Local<Context> context = isolate->GetCurrentContext();
         
-        std::string name = driver->getNameAtIndex(args[0]->NumberValue());
+        std::string name = driver->getNameAtIndex(args[0]->NumberValue(context).FromMaybe(0));
         Local<String> valName = String::NewFromUtf8(isolate, name.c_str());
         
         args.GetReturnValue().Set(valName);
@@ -126,8 +128,9 @@ namespace rmy85000 {
     
     void Rmy85000Node::getValueAtIndexSync (const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
-        
-        std::string value = driver->getValueAtIndex(args[0]->NumberValue());
+        Local<Context> context = isolate->GetCurrentContext();
+
+        std::string value = driver->getValueAtIndex(args[0]->NumberValue(context).FromMaybe(0));
         Local<String> retValue = String::NewFromUtf8(isolate, value.c_str());
         
         args.GetReturnValue().Set(retValue);
@@ -135,12 +138,13 @@ namespace rmy85000 {
     
     void Rmy85000Node::getValueAtIndex (const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
-        
+        Local<Context> context = isolate->GetCurrentContext();
+
         Work * work = new Work();
         work->request.data = work;
         
         // get the desired value index from the first param in the JS call
-        work->valueIndex = args[0]->NumberValue();
+        work->valueIndex = args[0]->NumberValue(context).FromMaybe(0);
         
         // store the callback from JS in the work package so we can invoke it later
         Local<Function> callback = Local<Function>::Cast(args[1]);
@@ -154,14 +158,17 @@ namespace rmy85000 {
     
     void Rmy85000Node::New(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
-        
-        String::Utf8Value param0(args[0]->ToString());
+        Local<Context> context = isolate->GetCurrentContext();
+
+        String::Utf8Value param0(isolate, args[0]);
         std::string devfile = std::string(*param0);
+
+        float calibration = args[1]->IsUndefined() ? 1.75 : args[1]->NumberValue(context).FromMaybe(0);
         
         // if invoked as costructor: 'new Rmy85000(...)'
         if (args.IsConstructCall()) {
             
-            Rmy85000Node* obj = new Rmy85000Node();
+            Rmy85000Node* obj = new Rmy85000Node(devfile, calibration);
             
             obj->Wrap(args.This());
             
@@ -169,8 +176,8 @@ namespace rmy85000 {
         }
         // else invoked as plain function 'Rmy85000(...)' -- turn into construct call
         else {
-            const int argc = 1;
-            Local<Value> argv[argc] = { args[0] };
+            const int argc = 2;
+            Local<Value> argv[argc] = { args[0], args[1] };
             
             Local<Function> cons = Local<Function>::New(isolate, constructor);
             Local<Context> context = isolate->GetCurrentContext();
@@ -180,7 +187,7 @@ namespace rmy85000 {
         }
         
         if (!driver) {
-            driver = new Rmy85000Drv(devfile);
+            driver = new Rmy85000Drv(devfile, calibration);
         }
         
     }

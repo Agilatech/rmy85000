@@ -24,9 +24,10 @@ const std::string Device::valueNames[numValues] = {"speed", "direction", "avg_sp
 
 const std::string Device::valueTypes[numValues] = {"float", "integer", "float", "integer", "float", "integer"};
 
-Rmy85000Drv::Rmy85000Drv(std::string devfile) {
+Rmy85000Drv::Rmy85000Drv(std::string devfile, float calibration) {
     
     this->serialDevice = devfile.c_str();
+    this->calibrationMultiplier = calibration;
     
     if (initialize()) {
         this->active = true;
@@ -43,6 +44,7 @@ Rmy85000Drv::Rmy85000Drv(std::string devfile) {
     
 }
 
+
 std::string Rmy85000Drv::getValueAtIndex(int index) {
     
     if (!this->active) {
@@ -55,6 +57,10 @@ std::string Rmy85000Drv::getValueAtIndex(int index) {
     else {
         return "none";
     }
+}
+
+void Rmy85000Drv::setCalibration(float cal) {
+    this->calibrationMultiplier = cal;
 }
 
 bool Rmy85000Drv::initialize() {
@@ -91,43 +97,64 @@ bool Rmy85000Drv::initialize() {
     sendString(tripleEsc, 3);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Setting RS-232 output ///
     sendString(rs232, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Setting ASCII output ///
     sendString(ascii, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Setting Wind Speed Units ///
     sendString(units, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Setting Damping ///
     sendString(damping, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Setting Sample Rate ///
     sendString(sample, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Setting Direction Mode ///
     sendString(direction, 8);
     
     usleep(RMY85000_READ_DELAY * 1000);
-    if (!readSerial()) { return false; }
+    if (!readSerial()) {
+        sendString(tripleEsc, 3); // try to clear
+        if (!readSerial()) { return false; }
+    }
     
     // Sending Operation CMD ///
     sendString(operate, 3);
@@ -182,6 +209,7 @@ bool Rmy85000Drv::readSerial() {
     }
     else {
         this->receiveBuffer[count] = 0;
+        //std::cout << "-*-*-*- " << this->receiveBuffer << std::endl;
     }
     return true;
 }
@@ -207,7 +235,7 @@ void Rmy85000Drv::processSerialStream() {
         // extract values only if the string looks right
         if ((buff.length() == 17) && (buff.substr(11,3) == "00*")) {
             
-            this->speed = std::stof(buff.substr(2,4), nullptr) * RMY85000_CALIBRATION_MULTIPLIER;
+            this->speed = std::stof(buff.substr(2,4), nullptr) * this->calibrationMultiplier;
             this->dir   = std::stoi(buff.substr(7,3), nullptr, 10);
             
             speed_total += this->speed;
@@ -240,9 +268,9 @@ void Rmy85000Drv::processSerialStream() {
     }
 }
 
-// This function is completely ridiculous but necessary.  The RMY85000 cannot
-// read a string sent to it at the stated baud.  Therefore, we have to send one
-// character at a time with a delay in between.
+// This function is completely ridiculous but seems to be necessary.  
+// It appears that the RMY85000 cannot read a string sent to it at the stated baud.  
+// Therefore, we have to send one character at a time with a delay in between.
 void Rmy85000Drv::sendString(unsigned char *string, int numChars) {
      for (int i = 0; i < numChars; i++) {
         write(this->serialFile, string+i, 1);

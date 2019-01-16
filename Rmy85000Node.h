@@ -43,7 +43,7 @@ public:
     
 private:
     
-    explicit Rmy85000Node(std::string devfile = "/dev/ttyS0") {}
+    explicit Rmy85000Node(std::string devfile = "/dev/ttyS0", float calibraion = 1.75) {}
     
     ~Rmy85000Node() {}
     

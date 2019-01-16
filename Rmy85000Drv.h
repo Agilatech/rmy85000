@@ -29,8 +29,9 @@
 class Rmy85000Drv : public Device {
     
 public:
-    Rmy85000Drv(std::string devfile);
+    Rmy85000Drv(std::string devfile, float calibration = 1.75);
     virtual std::string getValueAtIndex(int index);
+    virtual void setCalibration(float cal);
     
     static const int NUM_VALUES = 6;
     
@@ -59,8 +60,7 @@ private:
     static const int RMY85000_REFRESH_RATE = 1000; // milliseconds
     
     // Multiplies the raw output by this factor to achieve a calibrated output.
-    // Yes, this should indeed be a settable parameter, not a static const
-    static const int RMY85000_CALIBRATION_MULTIPLIER = 1.75;
+    float calibrationMultiplier = 1.75;
 
     bool readSerial();
     void sendString(unsigned char *string, int numChars);
